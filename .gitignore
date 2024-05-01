@@ -1,0 +1,49 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# R specific
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+
+# RStudio files
+*.Rproj
+pluto-analysis-recipes.Rproj
+.Rbuildignore
+.Renvron
+
+# Package files
+*.tar.gz
+*.Rcheck/
+
+# Logs
+*.log
+
+# Data files
+*.csv
+*.tsv
+*.xlsx
+
+# Environment files
+.env
+.Renviron
+
+# Plots and figures typically ignored
+*.jpeg
+*.png
+*.pdf
+
+# Compiled source
+*/src/*.so
+*/src/*.dll
+*/src/*.o
+*/src/*.a
+*/src/*.dylib
+
+# Temporary files
+*.swp
+*~
+._*

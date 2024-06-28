@@ -10,7 +10,7 @@
 # filtering thresholds and direction.
 
 # To use this script, simply update the user-defined parameters to reflect your
-# specific experiment and analysis. You should not need to change anything else.
+# specific experiment and analyses. You should not need to change anything else.
 
 # For more advanced plot customization, scroll down to the Main script and edit
 # parameters for the venn.diagram function. For more information, see the usage

@@ -1,5 +1,5 @@
 ################################################################################
-#####    Marker expression analysis - single marker (violin plot)    #####
+#####       Marker expression analysis - single marker (violin plot)       #####
 ################################################################################
 
 # Script to create violin plot visualizations for expression of a single marker

@@ -33,6 +33,9 @@ experiment_id <- "PLX276186"
 # Define a file path for the analysis plot (Venn diagram).
 display_file_path <- paste0(experiment_id, "_venn_diagram.png")
 
+# Define a file path for the analysis results (CSV file).
+results_file_path <- paste0(experiment_id, "_overlap_results.csv")
+
 # Define a name for the analysis in Pluto.
 analysis_name <- "Overlap analysis: Upregulated genes"
 
@@ -98,6 +101,15 @@ filter_sig_genes <- function(
     }
 }
 
+strip_trailing_digits <- function(x, category_names) {
+    pattern <- paste0(
+        "(?<=",
+        paste(category_names, collapse = "|"),
+        ")[0-9]+$"
+    )
+    gsub(pattern, "", x, perl = TRUE)
+}
+
 
 ################################################################################
 #####                              Main script                             #####
@@ -107,6 +119,7 @@ filter_sig_genes <- function(
 library(pluto)
 library(tidyverse)
 library(VennDiagram)
+library(gplots)
 
 # Log into Pluto
 pluto_login(api_token)
@@ -153,21 +166,34 @@ venn_plot <- venn.diagram(
     cat.default.pos = "outer",
     filename = NULL
 )
-
 png(
     display_file_path,
     width = 1200,
     height = 1200,
     res = 300
 )
-
 grid.draw(venn_plot)
 dev.off()
+
+# Get Venn diagram results in tabular format
+names(gene_lists) <- category_names
+gene_sets <- venn(gene_lists, show.plot = FALSE)
+overlap_results <- unlist(attributes(gene_sets)$intersections)
+overlap_results <- data.frame(
+    gene_symbol = overlap_results,
+    set = names(overlap_results)
+)
+overlap_results$set <- strip_trailing_digits(
+    overlap_results$set,
+    category_names
+)
+write.csv(overlap_results, results_file_path, row.names = FALSE)
 
 # Push results back to Pluto
 pluto_add_experiment_plot(
     experiment_id = experiment_id,
     display_file_path = display_file_path,
+    results_file_path = results_file_path,
     analysis_name = analysis_name,
     plot_methods = plot_methods
 )

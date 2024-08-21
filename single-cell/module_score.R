@@ -1,17 +1,25 @@
 ################################################################################
-#####              Marker expression analysis - single marker              #####
+#####                         Module score analysis                        #####
 ################################################################################
 
-# Script to create cell scatter plot and violin plot visualizations for
-# expression of a single marker gene for single cell RNA-seq (scRNA-seq) data in
-# Pluto Bio.
+# Script to create cell scatter plot and violin plot visualizations for activity
+# of a gene module for single cell RNA-seq (scRNA-seq) data in Pluto Bio.
+
+# To visualize a gene module, the Seurat AddModuleScore() function is used
+# (https://satijalab.org/seurat/reference/addmodulescore). AddModuleScore()
+# calculates a score for each cell that reflects the activity of a specific set
+# of genes, called a gene module. It does this by averaging the expression of 
+# these genes in each cell and normalizing the result to make the scores 
+# comparable across all cells. The scores are then added to the cell metadata, 
+# allowing for easy analysis and visualization of gene module activity in a
+# dataset.
 
 ################################################################################
 #####                           Cell scatter plot                          #####
 ################################################################################
 
 # This example script illustrates how to create a cell scatter plot in UMAP
-# space for a given marker gene. The cell scatter plot is equivalent to the
+# space for a given gene module. The cell scatter plot is equivalent to the
 # Feature plot in Seurat (https://satijalab.org/seurat/), and can utilize t-SNE
 # or PCA coordinates in place of UMAP coordinates.
 
@@ -36,19 +44,22 @@ api_token <- "YOUR_API_TOKEN"
 # or in the URL, and always starts with "PLX".
 experiment_id <- "PLX141180"
 
-# Define your target marker gene.
-target <- "olig2"
+# Define your gene module.
+module_name <- "NK marker genes"
+module_genes <- c("GZMB", "FGFBP2", "SPON2", "PRF1", "AKR1C3", "GNLY", "CLIC3",
+                  "CST7", "KLRD1", "GZMA", "XCL2", "TTC38", "CCL4", "PRSS23", 
+                  "NKG7", "FCGR3A", "GZMH", "IGFBP7", "CTSW", "SH2D1B")
 
 # Define a file path for the analysis plot (cell scatter plot).
-display_file_path <- paste0(experiment_id, "_", target, "_umap.html")
+display_file_path <- paste0(experiment_id, "_", module_name, "_umap.html")
 
 # Define a name for the analysis in Pluto.
-analysis_name <- paste0("Marker expression analysis: ", target)
+analysis_name <- paste0("Module score analysis: ", module_name)
 
 # Include methods to describe your analysis.
 plot_methods <- paste0(
     "Cell scatter plot using UMAP coordinates, colored by ",
-    target, " expression."
+    module_name, " module score."
 )
 
 # Colors for cell scatter plot color scale (low expression, high expression).
@@ -60,6 +71,7 @@ plot_colors <- c("#cdcfd1", "#AD05B1")
 
 # Load required libraries
 library(pluto)
+library(Seurat)
 library(tidyverse)
 library(plotly)
 library(htmlwidgets)
@@ -74,17 +86,24 @@ exp_obj <- pluto_read_seurat_object(
 )
 so <- exp_obj$obj
 
-# Plot target expression in UMAP space
-# Note: to plot target expression in t-SNE space, replace instances of 'umap'/
-# 'UMAP' with 'tsne'/'tSNE'. To plot target expression in PCA space, replace
-# instances of 'umap'/'UMAP' with 'pca'/'PC'.
+# Plot gene module in UMAP space
+# Note: to plot gene module in t-SNE space, replace instances of 'umap'/'UMAP'
+# with 'tsne'/'tSNE'. To plot gene module in PCA space, replace instances of 
+# 'umap'/'UMAP' with 'pca'/'PC'.
 
-# Get plot data (target expression and coordinates)
-plot_data <- bind_cols(
-    as.data.frame(so@reductions$umap@cell.embeddings),
-    as.data.frame(so@assays$RNA@data[`target`, ])
+# Add module score for gene module
+DefaultAssay(so) <- "RNA"
+so <- AddModuleScore(
+  so,
+  features = list(c(module_genes))
 )
-colnames(plot_data)[ncol(plot_data)] <- target
+
+# Get plot data (module score and coordinates)
+plot_data <- bind_cols(
+  as.data.frame(so@reductions$umap@cell.embeddings),
+  as.data.frame(so@meta.data[[ncol(so@meta.data)]])
+)
+colnames(plot_data)[ncol(plot_data)] <- module_name
 
 # Create cell scatter plot
 cell_scatter_plot <- plot_ly(plot_data) %>%
@@ -93,13 +112,13 @@ cell_scatter_plot <- plot_ly(plot_data) %>%
         y = plot_data$UMAP_2,
         type = "scattergl",
         mode = "markers",
-        color = plot_data[[target]],
+        color = plot_data[[module_name]],
         colors = plot_colors,
         marker = list(size = 3),
-        legendgroup = plot_data[[target]],
+        legendgroup = plot_data[[module_name]],
         showlegend = TRUE
     ) %>%
-    colorbar(title = "Expr.") %>%
+    colorbar(title = "Score") %>%
     layout(
         xaxis = list(
             title = list(text = "UMAP 1"),
@@ -123,7 +142,7 @@ cell_scatter_plot <- plot_ly(plot_data) %>%
 saveWidget(
     cell_scatter_plot,
     file = display_file_path,
-    title = paste0("Cell scatter plot, colored by ", target, " expression"),
+    title = paste0("Cell scatter plot, colored by ", module_name, " module score"),
     selfcontained = TRUE
 )
 
@@ -140,7 +159,7 @@ pluto_add_experiment_plot(
 ################################################################################
 
 # This example script illustrates how to create a violin plot, grouping cells
-# by the timepoint variable, which is available in this experiment's sample
+# by the cell type variable, which is available in this experiment's sample
 # data/Seurat meta.data. You can group your data by any variable available in
 # your Seurat meta.data. To see available variables, run:
 # head(so@meta.data)
@@ -167,30 +186,35 @@ api_token <- "YOUR_API_TOKEN"
 # or in the URL, and always starts with "PLX".
 experiment_id <- "PLX141180"
 
-# Define your target marker gene.
-target <- "olig2"
+# Define your gene module.
+module_name <- "NK marker genes"
+module_genes <- c("GZMB", "FGFBP2", "SPON2", "PRF1", "AKR1C3", "GNLY", "CLIC3",
+                  "CST7", "KLRD1", "GZMA", "XCL2", "TTC38", "CCL4", "PRSS23", 
+                  "NKG7", "FCGR3A", "GZMH", "IGFBP7", "CTSW", "SH2D1B")
 
 # Define a file path for the analysis plot (violin plot).
-display_file_path <- paste0(experiment_id, "_", target, "_violin.png")
+display_file_path <- paste0(experiment_id, "_", module_name, "_violin.png")
 
 # Define a name for the analysis in Pluto.
-analysis_name <- paste0("Marker expression analysis: ", target)
-
-# Include methods to describe your analysis.
-plot_methods <- paste0(
-    "Cell scatter plot using UMAP coordinates, colored by ",
-    target, " expression."
-)
+analysis_name <- paste0("Module score analysis: ", module_name)
 
 # Define your grouping variable.
 # Remember, you can access available grouping variables by running:
 # head(so@meta.data)
-cell_grouping <- "timepoint"
+cell_grouping <- "cell type"
 
 # Colors for violin plot groups.
 # The length of plot_colors must match the number of categories contained
 # in cell_grouping.
-plot_colors <- c("#AD05B1", "#f59e0b", "#0d9488")
+plot_colors <- c("#6366f1", "#a5b4fc", "#9333ea",
+                 "#c084fc", "#38bdf8", "#0369a1",
+                 "#8b5cf6", "#c4b5fd", "#4f46e5")
+
+# Include methods to describe your analysis.
+plot_methods <- paste0(
+    "Violin plot of ", module_name " module score, colored by ",
+    cell_grouping, "."
+)
 
 # If you are grouping cells by one of your clustering resolutions, you can
 # access the same color palette you are using in the Pluto app by loading in
@@ -207,6 +231,7 @@ plot_colors <- c("#AD05B1", "#f59e0b", "#0d9488")
 
 # Load required libraries
 library(pluto)
+library(Seurat)
 library(tidyverse)
 library(ggplot2)
 
@@ -220,26 +245,35 @@ exp_obj <- pluto_read_seurat_object(
 )
 so <- exp_obj$obj
 
+# Add module score for gene module
+DefaultAssay(so) <- "RNA"
+so <- AddModuleScore(
+  so,
+  features = list(c(module_genes)),
+  name = module_name
+)
+
+# Remove trailing 1 added by Seurat to module column name
+names(so@meta.data)[ncol(so@meta.data)] <- sub(
+    "1$", "", names(so@meta.data)[ncol(so@meta.data)]
+)
+
 # Create violin plot
 vln_plot <- so@meta.data %>%
-    mutate(
-        expression = so@assays$RNA@data[`target`, ],
-        expression = expression + rnorm(nrow(.)) / 200
-    ) %>%
     ggplot(aes(
         x = !!sym(cell_grouping),
-        y = expression,
+        y = !!sym(module_name),
         fill = !!sym(cell_grouping)
     )) +
-    geom_violin(draw_quantiles = c(0.5), scale = "width", trim = TRUE) +
+    geom_violin(draw_quantiles = c(0.5), scale = "area", trim = FALSE) +
     theme_bw() +
     scale_fill_manual(values = plot_colors) +
     scale_x_discrete() +
     scale_y_continuous(
-        name = "Log-normalized expression",
+        name = "Module score",
         labels = scales::comma
     ) +
-    labs(title = paste0(target, " expression by ", cell_grouping)) +
+    labs(title = paste0(module_name, " score by ", cell_grouping)) +
     theme(
         axis.title.x = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1),

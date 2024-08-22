@@ -6,15 +6,16 @@
 # independent peaks calls for each sample in Pluto Bio.
 
 # This example script creates a Venn diagram for overlapping peaks across 
-# samples.
+# individual samples.
 
 # To use this script, simply update the user-defined parameters to reflect your
 # specific experiment and analyses. You should not need to change anything else.
 
 # For more advanced plot customization, scroll down to the Main script and edit
-# parameters for the findOverlapsOfPeaks() and makeVennDiagram() function. 
+# parameters for the findOverlapsOfPeaks() and makeVennDiagram() functions. 
 # For more information, see the usage docs:
-# https://bioconductor.org/packages/release/bioc/vignettes/ChIPpeakAnno/inst/doc/ChIPpeakAnno.html#42_Assess_the_concordance_of_peak_replicates
+# https://bioconductor.org/packages/release/bioc/vignettes/ChIPpeakAnno/
+# inst/doc/ChIPpeakAnno.html#42_Assess_the_concordance_of_peak_replicates
 
 ################################################################################
 #####                        User-defined parameters                       #####
@@ -34,7 +35,7 @@ experiment_id <- "PLX278874"
 display_file_path <- paste0(experiment_id, "_venn_diagram.png")
 
 # Define a name for the analysis in Pluto.
-analysis_name <- "Overlapping peak analysis"
+analysis_name <- "Overlap analysis: Peaks"
 
 # Include methods to describe your analysis.
 plot_methods <- paste(
@@ -43,63 +44,43 @@ plot_methods <- paste(
 )
 
 # List the samples you want to include in your peak analysis.
-# The sample ids must be match the sample names listed your Pluto assay data
-sample_ids <- c(
-  "sample1",
-  "sample2",
-  "sample3"
-)
+# The sample ids must be match the sample names listed your Pluto assay data.
+sample_ids <- c("sample1", "sample2", "sample3")
 
 # List sample names that correspond to each of the above analyses.  This will be
 # what is displayed on the graph and does not need to match the Pluto assay
-# data sample IDs.
-# Note: order matters! The order of sample_names should match the order of
-# sample_ids.
-sample_names <- c(
-  "H3K27ac",
-  "H3K27me3",
-  "TF"
-)
+# data sample ids. Note: order matters! The order of sample_names should match
+# the order of sample_ids.
+sample_names <- c("H3K27ac", "H3K27me3", "TF")
 
-# Define venn circle fill colors (one color per sample).
-# Note: the length of venn_circle_colors must match the length of plot_ids and
-# sample_names
-venn_circle_colors <- c(
-  "cornflowerblue", 
-  "orchid1", 
-  "pink")
+# Define venn circle fill and border outline colors (one color per sample).
+# Note: the length of venn_circle_colors and venn_circle_border_colors must
+# match the length of samples_ids and sample_names.
+venn_circle_colors <- c("cornflowerblue", "orchid1", "pink")
+venn_circle_border_colors <- c("blue4", "darkviolet", "deeppink")
 
-# Define venn circle border outline colors (one color per sample).
-venn_circle_border_colors <- c(
-  "blue4", 
-  "darkviolet", 
-  "deeppink")
-
-
-# Define peaks overlapping criteria between samples
-# Parameter Definitions 
-#     * maxgap: default is -1L which means a peak will be overlapping if one range
-#     has its start or end strictly inside the other; otherwise, setting this
-#     parameter to a value such as 20 means that two peaks will be considered
-#     overlapping if the bumber of base pairs that separates them is less than
-#     20 base pairs apart
-#     * minoverlap:  default is 0L.  This is a value between 0.0-1.0.  A peak is 
+# Define peaks overlapping criteria between samples.
+# Parameter definitions:
+#     * maxgap: default is -1L which means a peak will be overlapping if one
+#     range has its start or end strictly inside the other; otherwise, setting
+#     this parameter to a value such as 20 means that two peaks will be
+#     considered overlapping if the number of base pairs that separates them is
+#     less than 20 base pairs apart.
+#     * minoverlap:  default is 0L.  This is a value between 0.0-1.0.  A peak is
 #     considered overlapping if the shared fraction is at least the values 
 #     indicated.  For example, if this was set to 0.10, then peaks would only
 #     be considered overlapping if at least 10% of the base pairs are shared
-#     between them
+#     between them.
 #     * connectedPeaks: options are keepAll or keepFirstListConsistent; this is 
 #     because multiple peaks in one sample might map to one broad peak in
 #     another sample.  If you set "keepAll" then it will tell you how many 
 #     peaks overlap from each sample, while setting "keepFirstListConsistent"
 #     means to keep the number in the venn diagram based on the first sample
-#     you listed above (note, you won't get the peak number break down per 
-#     sample)
+#     you listed above (Note: you won't get the peak number break down per 
+#     sample).
 maxgap = -1L
 minoverlap = 0L
 connectedPeaks = "keepAll"
-
-
 
 ################################################################################
 #####                          Helper function(s)                          #####
@@ -159,34 +140,30 @@ results_list <- lapply(plot_ids, function(plot_id) {
   )
 })
 
-# confirm all user defined inputs are valid
+# Confirm all user defined inputs are valid
 validate_input_parameters()
 
-
-# Convert per sample peak bed files to Granges objects
+# Convert per-sample peak bed files to Granges objects
 peaks_regions_per_sample <- lapply(results_list, function(bedFile) {
   toGRanges(bedFile, format = "BED", header = FALSE)
   }
 )
 
-# names the granges to your sample names
+# Name the Granges objects to match sample names
 names(peaks_regions_per_sample) <- sample_names
 
-# get peak overlaps
-# note the connectedPeaks in findOverlapsOfPeaks() is not the same parameter as
+# Get peak overlaps
+# Note: the connectedPeaks in findOverlapsOfPeaks() is not the same parameter as
 # connectedPeaks in makeVennDiagram()
-overlapping_peaks <- findOverlapsOfPeaks(peaks_regions_per_sample, 
-                           maxgap = maxgap, 
-                           minoverlap = minoverlap, 
-                           ignore.strand = TRUE, 
-                           connectedPeaks = "keepAll")
+overlapping_peaks <- findOverlapsOfPeaks(
+  peaks_regions_per_sample, maxgap = maxgap, minoverlap = minoverlap, 
+  ignore.strand = TRUE, connectedPeaks = "keepAll"
+)
 
 # Plot Venn diagram for all peaks in each sample
-venn_plot <- makeVennDiagram(overlapping_peaks,
-                         fill = venn_circle_colors,
-                         col = venn_circle_border_colors, 
-                         connectedPeaks = connectedPeaks,
-                         plot = TRUE
+venn_plot <- makeVennDiagram(
+  overlapping_peaks, fill = venn_circle_colors, col = venn_circle_border_colors,
+  connectedPeaks = connectedPeaks, plot = TRUE
 )
 
 png(

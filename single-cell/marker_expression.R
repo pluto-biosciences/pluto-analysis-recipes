@@ -74,10 +74,10 @@ exp_obj <- pluto_read_seurat_object(
 )
 so <- exp_obj$obj
 
-# Plot target expression in UMAP space
-# Note: to plot target expression in t-SNE space, replace instances of 'umap'/
-# 'UMAP' with 'tsne'/'tSNE'. To plot target expression in PCA space, replace
-# instances of 'umap'/'UMAP' with 'pca'/'PC'.
+# Plot cells in UMAP space, colored by target expression
+# Note: to plot cells in t-SNE space, replace instances of 'umap'/'UMAP' with 
+# 'tsne'/'tSNE'. To plot cells in PCA space, replace instances of 'umap'/'UMAP'
+# with 'pca'/'PC'.
 
 # Get plot data (target expression and coordinates)
 plot_data <- bind_cols(

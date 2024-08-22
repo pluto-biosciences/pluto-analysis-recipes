@@ -47,3 +47,5 @@ pluto-analysis-recipes.Rproj
 *.swp
 *~
 ._*
+
+.DS_Store

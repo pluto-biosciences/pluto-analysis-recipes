@@ -86,10 +86,10 @@ exp_obj <- pluto_read_seurat_object(
 )
 so <- exp_obj$obj
 
-# Plot gene module in UMAP space
-# Note: to plot gene module in t-SNE space, replace instances of 'umap'/'UMAP'
-# with 'tsne'/'tSNE'. To plot gene module in PCA space, replace instances of 
-# 'umap'/'UMAP' with 'pca'/'PC'.
+# Plot cells in UMAP space, colored by gene module activity
+# Note: to plot cells in t-SNE space, replace instances of 'umap'/'UMAP' with 
+# 'tsne'/'tSNE'. To plot cells in PCA space, replace instances of 'umap'/'UMAP'
+# with 'pca'/'PC'.
 
 # Add module score for gene module
 DefaultAssay(so) <- "RNA"

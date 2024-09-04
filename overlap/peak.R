@@ -44,11 +44,11 @@ plot_methods <- paste(
 )
 
 # List the samples you want to include in your peak analysis.
-# The sample ids must be match the sample names listed your Pluto assay data.
+# The sample ids must match the sample names listed your Pluto sample data.
 sample_ids <- c("sample1", "sample2", "sample3")
 
 # List sample names that correspond to each of the above analyses.  This will be
-# what is displayed on the graph and does not need to match the Pluto assay
+# what is displayed on the graph and does not need to match the Pluto sample
 # data sample ids. Note: order matters! The order of sample_names should match
 # the order of sample_ids.
 sample_names <- c("H3K27ac", "H3K27me3", "TF")

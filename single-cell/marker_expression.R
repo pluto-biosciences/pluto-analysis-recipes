@@ -75,7 +75,7 @@ exp_obj <- pluto_read_seurat_object(
 so <- exp_obj$obj
 
 # Plot cells in UMAP space, colored by target expression
-# Note: to plot cells in t-SNE space, replace instances of 'umap'/'UMAP' with 
+# Note: to plot cells in t-SNE space, replace instances of 'umap'/'UMAP' with
 # 'tsne'/'tSNE'. To plot cells in PCA space, replace instances of 'umap'/'UMAP'
 # with 'pca'/'PC'.
 
@@ -188,7 +188,7 @@ plot_colors <- c("#AD05B1", "#f59e0b", "#0d9488")
 
 # Include methods to describe your analysis.
 plot_methods <- paste0(
-    "Violin plot of ", target " expression, colored by ",
+    "Violin plot of ", target, " expression, colored by ",
     cell_grouping, "."
 )
 

@@ -8,9 +8,9 @@
 # To visualize a gene module, the Seurat AddModuleScore() function is used
 # (https://satijalab.org/seurat/reference/addmodulescore). AddModuleScore()
 # calculates a score for each cell that reflects the activity of a specific set
-# of genes, called a gene module. It does this by averaging the expression of 
-# these genes in each cell and normalizing the result to make the scores 
-# comparable across all cells. The scores are then added to the cell metadata, 
+# of genes, called a gene module. It does this by averaging the expression of
+# these genes in each cell and normalizing the result to make the scores
+# comparable across all cells. The scores are then added to the cell metadata,
 # allowing for easy analysis and visualization of gene module activity in a
 # dataset.
 
@@ -46,9 +46,11 @@ experiment_id <- "PLX141180"
 
 # Define your gene module.
 module_name <- "NK marker genes"
-module_genes <- c("GZMB", "FGFBP2", "SPON2", "PRF1", "AKR1C3", "GNLY", "CLIC3",
-                  "CST7", "KLRD1", "GZMA", "XCL2", "TTC38", "CCL4", "PRSS23", 
-                  "NKG7", "FCGR3A", "GZMH", "IGFBP7", "CTSW", "SH2D1B")
+module_genes <- c(
+    "GZMB", "FGFBP2", "SPON2", "PRF1", "AKR1C3", "GNLY", "CLIC3",
+    "CST7", "KLRD1", "GZMA", "XCL2", "TTC38", "CCL4", "PRSS23",
+    "NKG7", "FCGR3A", "GZMH", "IGFBP7", "CTSW", "SH2D1B"
+)
 
 # Define a file path for the analysis plot (cell scatter plot).
 display_file_path <- paste0(experiment_id, "_", module_name, "_umap.html")
@@ -87,21 +89,21 @@ exp_obj <- pluto_read_seurat_object(
 so <- exp_obj$obj
 
 # Plot cells in UMAP space, colored by gene module activity
-# Note: to plot cells in t-SNE space, replace instances of 'umap'/'UMAP' with 
+# Note: to plot cells in t-SNE space, replace instances of 'umap'/'UMAP' with
 # 'tsne'/'tSNE'. To plot cells in PCA space, replace instances of 'umap'/'UMAP'
 # with 'pca'/'PC'.
 
 # Add module score for gene module
 DefaultAssay(so) <- "RNA"
 so <- AddModuleScore(
-  so,
-  features = list(c(module_genes))
+    so,
+    features = list(c(module_genes))
 )
 
 # Get plot data (module score and coordinates)
 plot_data <- bind_cols(
-  as.data.frame(so@reductions$umap@cell.embeddings),
-  as.data.frame(so@meta.data[[ncol(so@meta.data)]])
+    as.data.frame(so@reductions$umap@cell.embeddings),
+    as.data.frame(so@meta.data[[ncol(so@meta.data)]])
 )
 colnames(plot_data)[ncol(plot_data)] <- module_name
 
@@ -188,9 +190,11 @@ experiment_id <- "PLX141180"
 
 # Define your gene module.
 module_name <- "NK marker genes"
-module_genes <- c("GZMB", "FGFBP2", "SPON2", "PRF1", "AKR1C3", "GNLY", "CLIC3",
-                  "CST7", "KLRD1", "GZMA", "XCL2", "TTC38", "CCL4", "PRSS23", 
-                  "NKG7", "FCGR3A", "GZMH", "IGFBP7", "CTSW", "SH2D1B")
+module_genes <- c(
+    "GZMB", "FGFBP2", "SPON2", "PRF1", "AKR1C3", "GNLY", "CLIC3",
+    "CST7", "KLRD1", "GZMA", "XCL2", "TTC38", "CCL4", "PRSS23",
+    "NKG7", "FCGR3A", "GZMH", "IGFBP7", "CTSW", "SH2D1B"
+)
 
 # Define a file path for the analysis plot (violin plot).
 display_file_path <- paste0(experiment_id, "_", module_name, "_violin.png")
@@ -206,13 +210,15 @@ cell_grouping <- "cell type"
 # Colors for violin plot groups.
 # The length of plot_colors must match the number of categories contained
 # in cell_grouping.
-plot_colors <- c("#6366f1", "#a5b4fc", "#9333ea",
-                 "#c084fc", "#38bdf8", "#0369a1",
-                 "#8b5cf6", "#c4b5fd", "#4f46e5")
+plot_colors <- c(
+    "#6366f1", "#a5b4fc", "#9333ea",
+    "#c084fc", "#38bdf8", "#0369a1",
+    "#8b5cf6", "#c4b5fd", "#4f46e5"
+)
 
 # Include methods to describe your analysis.
 plot_methods <- paste0(
-    "Violin plot of ", module_name " module score, colored by ",
+    "Violin plot of ", module_name, " module score, colored by ",
     cell_grouping, "."
 )
 
@@ -248,9 +254,9 @@ so <- exp_obj$obj
 # Add module score for gene module
 DefaultAssay(so) <- "RNA"
 so <- AddModuleScore(
-  so,
-  features = list(c(module_genes)),
-  name = module_name
+    so,
+    features = list(c(module_genes)),
+    name = module_name
 )
 
 # Remove trailing 1 added by Seurat to module column name

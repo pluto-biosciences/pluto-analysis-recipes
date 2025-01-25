@@ -28,15 +28,6 @@ api_token <- "YOUR_API_TOKEN"
 # or in the URL, and always starts with "PLX".
 experiment_id <- "PLX185698"
 
-# Define a file path for the analysis plot (volcano plot).
-display_file_path <- paste0(experiment_id, "_volcano_plot.png")
-
-# Define a file path for the analysis results (CSV file).
-results_file_path <- paste0(experiment_id, "_deseq2_results.csv")
-
-# Define a name for the analysis in Pluto.
-analysis_name <- "Differential expression analysis"
-
 # List the experimental sample IDs you want to use for the analysis.
 # Note: these must match the sample IDs in your experiment sample data!
 experimental_samples <- c("Fsk_24h_repA", "Fsk_24h_repB", "Fsk_24h_repC")
@@ -56,6 +47,23 @@ covariates <- NULL
 read_count_threshold <- 3
 # Minimum proportion of samples where the gene must meet `read_count_threshold`
 sample_pct_threshold <- 0.2
+
+# Define a file path for the analysis plot (volcano plot).
+display_file_path <- paste0(
+    experiment_id, "_deg_plot_",
+    experiment_group_name, "_vs_", control_group_name,
+    ".html"
+)
+
+# Define a file path for the analysis results (CSV file).
+results_file_path <- paste0(
+    experiment_id, "_deg_results_",
+    experiment_group_name, "_vs_", control_group_name,
+    ".csv"
+)
+
+# Define a name for the analysis in Pluto.
+analysis_name <- "Differential expression analysis"
 
 # Include methods to describe your analysis.
 plot_methods <- paste0(

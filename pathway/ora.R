@@ -50,7 +50,7 @@ results_file_path <- paste0(experiment_id, "_ORA_results.csv")
 analysis_name <- "Over-representation analysis: Upregulated genes"
 
 # Speficy your experiment's organism.
-# Acceptable organisms include: human, mouse, rat, zebrafish, fruit fly, xlaevis
+# Acceptable organisms include: human, mouse, rat, zebrafish, fruit fly
 organism <- "zebrafish"
 
 # Specify the collection shortname you would like to use from MSigDB.

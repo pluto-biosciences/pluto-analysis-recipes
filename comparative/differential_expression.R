@@ -48,6 +48,9 @@ read_count_threshold <- 3
 # Minimum proportion of samples where the gene must meet `read_count_threshold`
 sample_pct_threshold <- 0.2
 
+# Define a name for the analysis in Pluto.
+analysis_name <- "Differential expression analysis"
+
 # Define a file path for the analysis plot (volcano plot).
 display_file_path <- paste0(
     experiment_id, "_deg_plot_",
@@ -61,9 +64,6 @@ results_file_path <- paste0(
     experiment_group_name, "_vs_", control_group_name,
     ".csv"
 )
-
-# Define a name for the analysis in Pluto.
-analysis_name <- "Differential expression analysis"
 
 # Include methods to describe your analysis.
 plot_methods <- paste0(

@@ -349,7 +349,7 @@ color_palette <- c(
 
 # Create the volcano plot
 volcano_plot <- plot_ly(
-    data = deg_tab,
+    data = plot_data,
     x = ~Log2_Fold_Change,
     y = ~neg_log10_pvalue,
     type = "scatter",

@@ -82,7 +82,7 @@ sig_decreased_color <- "#06B6D4"
 not_sig_color <- "gray"
 
 # Define plot significance thresholds.
-pval_threshold <- 0.1
+pval_threshold <- 0.01
 lower_fc_threshold <- 0.8 # Fold change; will be converted to log2
 upper_fc_threshold <- 1.2 # Fold change; will be converted to log2
 

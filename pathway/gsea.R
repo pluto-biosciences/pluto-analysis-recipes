@@ -2,9 +2,10 @@
 #####                     Gene set enrichment analysis                     #####
 ################################################################################
 
-# Script to run gene set enrichment analysis (ORA) and create an enrichment plot
-# or score bar plot of the top pathways or gene sets that are most significantly
-# enriched in a given list of differentially expressed genes from Pluto Bio.
+# Script to run gene set enrichment analysis (GSEA) and create an enrichment
+# plot or score bar plot of the top pathways or gene sets that are most
+# significantly enriched in a given list of differentially expressed genes from
+# Pluto Bio.
 
 # This example script runs GSEA on a ranked list of genes. The genes should be
 # ranked based on a metric such as fold change, p-value, or a combined ranking.

@@ -25,6 +25,9 @@
 # parameters for the ggplot function. For more information, see the usage docs:
 # https://ggplot2.tidyverse.org/
 
+# Plotting code adapted from Shirin's playgRound:
+# https://shiring.github.io/machine_learning/2017/03/16/rf_plot_ggraph
+
 ################################################################################
 #####                        User-defined parameters                       #####
 ################################################################################

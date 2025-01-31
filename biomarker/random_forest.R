@@ -3,10 +3,23 @@
 ################################################################################
 
 # This script runs a Random Forest model to perform biomarker selection based
-# on assay data and sample data from a Pluto Bio experiment.
+# on assay data and sample data from a Pluto Bio experiment, using a selected
+# catergorical variable from the sample data and specifying two groups for
+# comparison. The analysis will then identify key biomarkers distinguishing
+# these groups.
 
 # To use this script, simply update the user-defined parameters to reflect your
-# specific experiment and analyses. You should not need to change anything else.
+# specific experiment and variable. You should not need to change anything else.
+
+# For more advanced configuration options and fine-tuning of the Random Forest
+# model, scroll down to the Main script and adjust the parameters for the
+# randomForest function. For detailed information on setup and additional
+# options, refer to the Random Forest documentation:
+# https://cran.r-project.org/web/packages/randomForest/index.html
+
+# For more advanced plot customization, scroll down to the Main script and edit
+# parameters for the ggplot function. For more information, see the usage docs:
+# https://ggplot2.tidyverse.org/
 
 # For more advanced plot customization, scroll down to the Main script and edit
 # parameters for the ggplot function. For more information, see the usage docs:
@@ -52,8 +65,8 @@ plot_methods <- paste0(
 # Load required libraries
 library(pluto)
 library(randomForest)
-library(ggplot2)
 library(dplyr)
+library(ggplot2)
 library(ggraph)
 library(igraph)
 

@@ -182,6 +182,9 @@ print("Top biomarkers based on importance:")
 head(sorted_importance, 10) # Top 10 important features
 
 ranked_biomarkers <- as.data.frame(sorted_importance)
+ranked_biomarkers <- cbind(
+    gene_id = rownames(ranked_biomarkers), ranked_biomarkers
+)
 write.csv(ranked_biomarkers, results_file_path, row.names = FALSE, na = "")
 
 # Push results back to Pluto

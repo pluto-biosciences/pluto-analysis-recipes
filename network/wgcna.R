@@ -45,7 +45,7 @@ min_fraction <- 0.20
 # WGCNA parameters.
 # Soft-thresholding power for network construction
 # Note: this value should be updated based on power analysis results!
-power_select <- 30
+power_select <- 12
 # Network type for WGCNA analysis ("signed", "unsigned", or "signed hybrid")
 # "unsigned" means the direction of correlation does not matter; genes are
 # connected in a network whether it is a positive or negative correlation.

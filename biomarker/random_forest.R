@@ -4,7 +4,7 @@
 
 # This script runs a Random Forest model to perform biomarker selection based
 # on assay data and sample data from a Pluto Bio experiment, using a selected
-# catergorical variable from the sample data and specifying two groups for
+# categorical variable from the sample data and specifying two groups for
 # comparison. The analysis will then identify key biomarkers distinguishing
 # these groups.
 
@@ -16,10 +16,6 @@
 # randomForest function. For detailed information on setup and additional
 # options, refer to the Random Forest documentation:
 # https://cran.r-project.org/web/packages/randomForest/index.html
-
-# For more advanced plot customization, scroll down to the Main script and edit
-# parameters for the ggplot function. For more information, see the usage docs:
-# https://ggplot2.tidyverse.org/
 
 # For more advanced plot customization, scroll down to the Main script and edit
 # parameters for the ggplot function. For more information, see the usage docs:
@@ -40,7 +36,13 @@ api_token <- "YOUR_API_TOKEN"
 
 # The experiment ID can be found in the Workflow tab of your experiment in Pluto
 # or in the URL, and always starts with "PLX".
-experiment_id <- "PLX074620"
+experiment_id <- "PLX274800"
+
+# Optionally, use differential expression results to get genes that pass a
+# minimum expression threshold. To use differential expression results, define
+# the plot ID for the differential expression analysis you want to use.
+# Filtering is recommended to reduce bias towards lowly abundant genes.
+plot_id <- "52eaa19d-96bb-4b15-8793-a8283a93b759" # NULL skips this filtering
 
 # Define the sample data column name to use for random forest.
 sample_var <- "ajcc_pathologic_tumor_stage"
@@ -55,6 +57,14 @@ display_file_path <- paste0(experiment_id, "_decision_tree.png")
 # Define a file path for the analysis results (CSV file).
 results_file_path <- paste0(experiment_id, "_ranked_biomarkers.csv")
 
+# Define a method to sort features by importance.
+# Options: MeanDecreaseAccuracy or MeanDecreaseGini
+sort_method <- "MeanDecreaseAccuracy"
+
+# Define the number of important features to filter prior to the Classification
+# and Regression Tree (CART).
+n_features <- 50
+
 # Include methods to describe your analysis.
 plot_methods <- paste0(
     "Random Forest analysis was performed to identify important biomarkers ",
@@ -67,11 +77,14 @@ plot_methods <- paste0(
 
 # Load required libraries
 library(pluto)
+library(edgeR)
 library(randomForest)
 library(dplyr)
 library(ggplot2)
 library(ggraph)
 library(igraph)
+library(rpart)
+library(rpart.plot)
 
 # Log into Pluto
 pluto_login(api_token)
@@ -80,6 +93,31 @@ pluto_login(api_token)
 assay_data <- pluto_read_assay_data(experiment_id)
 rownames(assay_data) <- assay_data$gene_id
 assay_data <- assay_data[, -1]
+
+# Log2 CPM normalization of RNA-seq counts
+assay_data_cpm <- as.data.frame(cpm(assay_data, log = FALSE))
+assay_data_cpm <- round(log2(assay_data_cpm + 1), 3)
+
+# Optionally filter assay_data by genes tested for differential expression
+# Note: this does not use only differentially expressed genes
+if (!is.null(plot_id)) {
+    tryCatch(
+        {
+            dge_results <- pluto_read_results(
+                experiment_id = experiment_id, plot_id = plot_id
+            )
+        },
+        error = function(e) {
+            stop(
+                "Failed to read results for experiment ID: ", experiment_id,
+                " and plot ID: ", plot_id
+            )
+        }
+    )
+    assay_data_cpm_filtered <- assay_data_cpm[
+        rownames(assay_data_cpm) %in% dge_results$Gene_Symbol,
+    ]
+}
 
 # Read in experiment sample data
 sample_data <- pluto_read_sample_data(experiment_id)
@@ -92,7 +130,9 @@ variable_data <- sample_data %>%
 sample_ids <- variable_data$sample_id
 
 # Subset assay_data to only include columns corresponding to filtered sample_ids
-assay_data_filtered <- assay_data[, colnames(assay_data) %in% sample_ids]
+assay_data_filtered <- assay_data_cpm_filtered[
+    , colnames(assay_data_cpm_filtered) %in% sample_ids
+]
 
 # Transpose assay_data_filtered so that samples are rows and genes are columns
 assay_data_filtered <- t(assay_data_filtered)
@@ -105,11 +145,13 @@ set.seed(42) # For reproducibility
 rf_model <- randomForest(
     assay_data_filtered,
     y = variable_vec,
-    importance = TRUE
+    importance = TRUE,
+    ntree = 500
 )
 
 # View the model summary
 # print(rf_model)
+# plot(rf_model)
 
 # Plot the decision tree (take the first tree for simplicity)
 # You can extract and plot any tree in the forest
@@ -161,6 +203,7 @@ decision_tree_plot <- ggraph(graph, "dendrogram") +
         axis.title.y = element_blank(),
         plot.title = element_text(size = 18)
     )
+# print(decision_tree_plot)
 
 # Save decision tree plot
 ggsave(
@@ -174,7 +217,7 @@ importance_scores <- rf_model$importance
 
 # Sort features by importance
 sorted_importance <- importance_scores[
-    order(importance_scores[, 1], decreasing = TRUE),
+    order(importance_scores[, sort_method], decreasing = TRUE),
 ]
 
 # Print top important biomarkers
@@ -194,3 +237,16 @@ pluto_add_experiment_plot(
     analysis_name = analysis_name,
     plot_methods = plot_methods
 )
+
+# A single classification and regression tree (CART)
+# Subset data to n_features features before classification
+assay_data_cart <- data.frame(
+    assay_data_filtered[, rownames(sorted_importance)[1:n_features]]
+)
+assay_data_cart$Group <- variable_vec # Directly assign the factor as Group
+cart_model <- rpart(Group ~ .,
+    data = assay_data_cart,
+    method = "class"
+)
+# Plot the tree
+rpart.plot(cart_model, type = 5, extra = 101)

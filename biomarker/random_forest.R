@@ -8,6 +8,10 @@
 # comparison. The analysis will then identify key biomarkers distinguishing
 # these groups.
 
+# This script will output a decision tree plot based on a CART model using the
+# top features identified by the Random Forest model as being important,
+# focusing on the most important biomarkers identified across the Random Forest.
+
 # To use this script, simply update the user-defined parameters to reflect your
 # specific experiment and variable. You should not need to change anything else.
 
@@ -16,13 +20,6 @@
 # randomForest function. For detailed information on setup and additional
 # options, refer to the Random Forest documentation:
 # https://cran.r-project.org/web/packages/randomForest/index.html
-
-# For more advanced plot customization, scroll down to the Main script and edit
-# parameters for the ggplot function. For more information, see the usage docs:
-# https://ggplot2.tidyverse.org/
-
-# Plotting code adapted from Shirin's playgRound:
-# https://shiring.github.io/machine_learning/2017/03/16/rf_plot_ggraph
 
 ################################################################################
 #####                        User-defined parameters                       #####
@@ -49,7 +46,7 @@ sample_var <- "ajcc_pathologic_tumor_stage"
 
 # Define the sample categories to use for random forest.
 # These should be values from the sample_var column in your sample data.
-sample_cat <- c("Stage IA", "Stage IB")
+sample_cat <- c("Stage IA", "Stage IIIA")
 
 # Define a file path for the analysis plot (decision tree plot).
 display_file_path <- paste0(experiment_id, "_decision_tree.png")
@@ -80,9 +77,6 @@ library(pluto)
 library(edgeR)
 library(randomForest)
 library(dplyr)
-library(ggplot2)
-library(ggraph)
-library(igraph)
 library(rpart)
 library(rpart.plot)
 
@@ -153,64 +147,6 @@ rf_model <- randomForest(
 # print(rf_model)
 # plot(rf_model)
 
-# Plot the decision tree (take the first tree for simplicity)
-# You can extract and plot any tree in the forest
-tree <- getTree(rf_model, k = 1, labelVar = TRUE)
-tree <- tree %>%
-    tibble::rownames_to_column() %>%
-    mutate(`split point` = ifelse(is.na(prediction), `split point`, NA))
-graph_frame <- data.frame(
-    from = rep(tree$rowname, 2),
-    to = c(tree$`left daughter`, tree$`right daughter`)
-)
-graph <- graph_from_data_frame(graph_frame) %>%
-    delete_vertices("0")
-
-# Set node labels
-V(graph)$node_label <- gsub("_", " ", as.character(tree$`split var`))
-V(graph)$leaf_label <- as.character(tree$prediction)
-V(graph)$split <- as.character(round(tree$`split point`, digits = 2))
-
-# Plot
-decision_tree_plot <- ggraph(graph, "dendrogram") +
-    theme_bw() +
-    geom_edge_link() +
-    geom_node_point() +
-    geom_node_text(
-        aes(label = node_label),
-        na.rm = TRUE, repel = TRUE
-    ) +
-    geom_node_label(
-        aes(label = split),
-        vjust = 2.5, na.rm = TRUE, fill = "white"
-    ) +
-    geom_node_label(
-        aes(label = leaf_label, fill = leaf_label),
-        na.rm = TRUE,
-        repel = TRUE, colour = "white", fontface = "bold", show.legend = FALSE
-    ) +
-    theme(
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.background = element_blank(),
-        plot.background = element_rect(fill = "white"),
-        panel.border = element_blank(),
-        axis.line = element_blank(),
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks = element_blank(),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        plot.title = element_text(size = 18)
-    )
-# print(decision_tree_plot)
-
-# Save decision tree plot
-ggsave(
-    display_file_path,
-    height = 6, width = 12
-)
-
 # Feature importance (biomarker selection)
 # Get the feature importance
 importance_scores <- rf_model$importance
@@ -230,14 +166,6 @@ ranked_biomarkers <- cbind(
 )
 write.csv(ranked_biomarkers, results_file_path, row.names = FALSE, na = "")
 
-# Push results back to Pluto
-pluto_add_experiment_plot(
-    experiment_id = experiment_id,
-    display_file_path = display_file_path,
-    analysis_name = analysis_name,
-    plot_methods = plot_methods
-)
-
 # A single classification and regression tree (CART)
 # Subset data to n_features features before classification
 assay_data_cart <- data.frame(
@@ -249,4 +177,14 @@ cart_model <- rpart(Group ~ .,
     method = "class"
 )
 # Plot the tree
+png(display_file_path, width = 800, height = 600)
 rpart.plot(cart_model, type = 5, extra = 101)
+dev.off()
+
+# Push results back to Pluto
+pluto_add_experiment_plot(
+    experiment_id = experiment_id,
+    display_file_path = display_file_path,
+    analysis_name = analysis_name,
+    plot_methods = plot_methods
+)

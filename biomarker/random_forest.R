@@ -21,6 +21,10 @@
 # options, refer to the Random Forest documentation:
 # https://cran.r-project.org/web/packages/randomForest/index.html
 
+# For more advanced plot customization, scroll down to the Main script and edit
+# parameters for the  rpart.plot function. For more information, see the usage
+# docs: https://cran.r-project.org/web/packages/rpart.plot/rpart.plot.pdf
+
 ################################################################################
 #####                        User-defined parameters                       #####
 ################################################################################

@@ -390,20 +390,19 @@ pluto_add_experiment_plot(
 #------------------------------------------------------------------------------#
 #----                  Step 9: Find hub genes (optional)                   ----#
 #------------------------------------------------------------------------------#
-# Name of module color to explore
-module_color_of_interest <- "yellow"
+# Define column of binarized associations to explore
+column_of_interest <- 1
 
 # Calculate gene significance and associated p-values
 gene_sig_corr <- cor(
-  t(normalized_data), binarized_assocs_vs_all[[1]],
+  t(normalized_data), binarized_assocs_vs_all[[column_of_interest]],
   method = "pearson"
-) # this would do it for the first column of binarized assocations
+)
 
 # Calculate the p-values
 gene_sig_corr_pvals <- corPvalueStudent(gene_sig_corr, totalSamples)
 
-# Get the top 25 hub genes that are significantly correlated the association
-# for a module of interest
+# Get the top 25 hub genes that are significantly correlated to the association
 hub_genes <- gene_sig_corr_pvals %>%
   as.data.frame() %>%
   arrange(V1) %>%
@@ -413,7 +412,11 @@ colnames(hub_genes)[1] <- "pval"
 hub_genes <- hub_genes[c("gene_symbol", "pval")]
 
 write.csv(hub_genes,
-  paste0(outdir, "hub_genes_for_ME", module_color_of_interest),
+  paste0(
+    outdir,
+    "hub_genes_for_",
+    colnames(binarized_assocs_vs_all)[column_of_interest]
+  ),
   row.names = FALSE,
   na = ""
 )

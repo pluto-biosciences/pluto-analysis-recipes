@@ -75,7 +75,7 @@ analysis_object_file_path <- paste0(
 
 # Define a file path for the analysis plot (heatmap).
 display_file_path <- paste0(
-  experiment_id, "_WGCNA_heatmap.png"
+  outdir, experiment_id, "_WGCNA_heatmap.png"
 )
 
 # Include methods to describe your analysis.

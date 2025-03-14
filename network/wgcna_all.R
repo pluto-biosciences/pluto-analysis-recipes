@@ -26,15 +26,15 @@
 
 # You will need an API token to programmatically access your data in Pluto.
 # For info, visit: https://help.pluto.bio/en/articles/creating-your-api-token
-api_token <- "YOUR_API_TOKEN"
+api_token <- "7e251902ce0eee2b7d72be28a4f3ff7d6cae3cbe"
 
 # The experiment ID can be found in the Workflow tab of your experiment in Pluto
 # or in the URL, and always starts with "PLX".
-experiment_id <- "PLX185698"
+experiment_id <- "PLX139863"
 
 # Define the trait to be tested for the analysis.
 # Note: this must match a sample ID from your sample data!
-tested_trait <- "cell_line_modification"
+tested_trait <- "treatment"
 
 # Assay data filtering options.
 # Minimum number of counts per gene per sample to be included in the analysis
@@ -76,16 +76,16 @@ plot_methods <- paste0(
     min_fraction * 100,
     "% of samples were removed from the analysis. Data was normalized using ",
     "variance stabilizing transformation (VST) from the DESeq2 R package. A ",
-    "signed network was generated using a power threshold of ", power_select,
-    " and using a Pearson correlation with a minimum module size of 30 genes. ",
-    "All remaining parameters were used at default settings.",
-    "All pairwise combinations of ", tested_trait, " relative to all ",
-    "remaining samples were binarized. Pearson correlations were ",
-    "calculated for statistical significance within each comparison relative ",
-    "to all remaining samples and plotted using the CorLevelPlot R package. ",
-    "Asteriks indicate level of significance: * < 0.05, ** < 0.01, ",
-    "*** < 0.001, while values indicate either a positive correlation (+) or ",
-    "an anti-correlation (-) to the module eigengene."
+    network_type, " network was generated using a power threshold of ",
+    power_select, " and using a Pearson correlation with a minimum module ",
+    "size of 30 genes. All remaining parameters were used at default settings.",
+    "All pairwise combinations of traits relative to all remaining samples ",
+    "were binarized. Pearson correlations were calculated for statistical ",
+    "significance within each comparison relative to all remaining samples ",
+    "and plotted using the CorLevelPlot R package. Asteriks indicate level of ",
+    "significance: * < 0.05, ** < 0.01, *** < 0.001, while values indicate ",
+    "either a positive correlation (+) or an anti-correlation (-) to the ",
+    "module eigengene."
 )
 
 # Define plot colors for heatmap.
@@ -371,6 +371,7 @@ sample_data[, tested_trait] <- factor(sample_data[, tested_trait])
 # Binarize all associations
 binarized_assocs <- binarizeCategoricalColumns(
     sample_data[, tested_trait],
+    dropFirstLevelVsAll = FALSE,
     levelSep.vsAll = " vs ", includeLevelVsAll = TRUE, minCount = 1
 )
 colnames(binarized_assocs) <- gsub("^data\\.", "", colnames(binarized_assocs))
@@ -404,7 +405,7 @@ rownames(vis_assoc_data_all) <- vis_assoc_data_all$Row.names
 
 # Select only the columns you want to visualize
 vis_assoc_data_all <- vis_assoc_data_all[, c(
-    names(module_eigengenes), names(binarized_assocs_vs_all)
+    names(module_eigengenes), names(binarized_assocs)
 )]
 
 # Generate a heatmap of the p-values and correlations
@@ -495,6 +496,10 @@ for (comp in colnames(binarized_assocs)) {
 }
 
 # Plot heatmap of network connectivity of genes
+png(filename = paste(
+    outdir, "network_connectivity_heatmap_", timestamp, ".png",
+    sep = ""
+), width = 1000, height = 700)
 WGCNA::plotNetworkHeatmap(
     datExpr = wgcna_mat,
     plotGenes = top_genes_to_plot,
@@ -502,3 +507,4 @@ WGCNA::plotNetworkHeatmap(
     power = power_select,
     networkType = network_type
 )
+dev.off()

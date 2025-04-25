@@ -51,6 +51,14 @@ cpm_normalize <- TRUE
 # Note: these must match column names in your sample data!
 group_variables <- c("cell_line_modification")
 
+# Define whether to use variable features for PCA (optional).
+use_var_features <- FALSE # Set to TRUE to use variable features for PCA
+num_var_features <- 1000 # Number of variable features to use for PCA
+
+# Define whether to use batch adjustment (optional).
+batch_adjustment <- FALSE # Set to TRUE to perform batch adjustment with limma
+batch_adjustment_var <- "batch" # Column name in sample data for batch adjustment
+
 # Define a name for the analysis in Pluto.
 analysis_name <- "Principal components analysis"
 
@@ -60,19 +68,43 @@ display_file_path <- paste0(experiment_id, "_pca_scatter_plot.html")
 # Define a file path for the analysis results (CSV file).
 results_file_path <- paste0(experiment_id, "_pca_results.csv")
 
+#------------------------------------------------------------------------------#
+#----                                Methods                               ----#
+#------------------------------------------------------------------------------#
 # Include methods to describe your analysis.
-if (is.null(sample_ids)) {
+plot_methods <- paste0(
+    "Principal components analysis (PCA) was calculated by applying the ",
+    "prcomp() R function to "
+)
+if (cpm_normalize) {
     plot_methods <- paste0(
-        "Principal components analysis (PCA) was calculated by applying the ",
-        "prcomp() R function to counts per million (CPM)-normalized values ",
-        "for all targets in the experiment and all samples."
+        plot_methods,
+        "counts per million (CPM)-normalized values for all targets in the ",
+        "experiment and "
     )
 } else {
     plot_methods <- paste0(
-        "Principal components analysis (PCA) was calculated by applying the ",
-        "prcomp() R function to counts per million (CPM)-normalized values ",
-        "for all targets in the experiment and the following sample IDs: ",
+        plot_methods,
+        "raw counts values for all targets in the experiment and "
+    )
+}
+if (is.null(sample_ids)) {
+    plot_methods <- paste0(
+        plot_methods,
+        "all samples."
+    )
+} else {
+    plot_methods <- paste0(
+        plot_methods,
+        "the following sample IDs: ",
         paste(sample_ids, collapse = ", "), "."
+    )
+}
+if (batch_adjustment) {
+    plot_methods <- paste0(
+        plot_methods,
+        " Normalized data was batch-corrected for ", batch_adjustment_var,
+        " using the removeBatchEffect() function in limma."
     )
 }
 if (center_data) {
@@ -87,6 +119,24 @@ if (scale_data) {
         " The data was scaled to have unit variance before PCA was computed."
     )
 }
+if (use_var_features) {
+    plot_methods <- paste0(
+        plot_methods,
+        " The top ", num_var_features, " features with the highest variance ",
+        "were used across "
+    )
+    if (is.null(sample_ids)) {
+        plot_methods <- paste0(
+            plot_methods,
+            "all samples."
+        )
+    } else {
+        plot_methods <- paste0(
+            plot_methods,
+            "the included samples."
+        )
+    }
+}
 
 ################################################################################
 #####                              Main script                             #####
@@ -95,6 +145,7 @@ if (scale_data) {
 # Load required libraries
 library(pluto)
 library(edgeR)
+library(limma)
 library(tidyverse)
 library(plotly)
 library(htmlwidgets)
@@ -141,6 +192,48 @@ message(
 if (cpm_normalize) {
     assay_data <- as.data.frame(edgeR::cpm(assay_data, log = FALSE))
     assay_data <- log2(assay_data + 1)
+}
+
+#------------------------------------------------------------------------------#
+#----                           Batch correction                           ----#
+#------------------------------------------------------------------------------#
+# Perform limma batch correction if batch_adjustment is TRUE.
+# Note: batch adjustment with limma must be performed on normalized data.
+if (cpm_normalize && batch_adjustment) {
+    # Check that batch column has more than one value
+    if (length(unique(sample_data[[batch_adjustment_var]])) < 2) {
+        message("Batch adjustment column has fewer than 2 unique values.")
+        message("Skipping batch adjustment...")
+    }
+    # Batch adjustment with limma
+    assay_data <- data.frame(
+        removeBatchEffect(
+            assay_data,
+            batch = sample_data[[batch_adjustment_var]]
+        )
+    )
+} else if (!cpm_normalize && batch_adjustment) {
+    message("Batch adjustment with limma requires CPM-normalized data.")
+    message("Skipping batch adjustment...")
+}
+
+#------------------------------------------------------------------------------#
+#----                   Subset to most variable features                   ----#
+#------------------------------------------------------------------------------#
+if (use_var_features) {
+    if (num_var_features > nrow(assay_data)) {
+        num_var_features <- nrow(assay_data)
+        message("num_var_features > number of rows in assay_data.")
+        message("Defaulting to ", num_var_features, " features.")
+    }
+    message("Subsetting to top ", num_var_features, " variable features...")
+    sample_variance <- apply(assay_data, 1, var)
+    sample_variance_ordered <- sort(sample_variance, decreasing = TRUE)
+    assay_data <- assay_data[
+        rownames(assay_data) %in% names(
+            sample_variance_ordered
+        )[1:num_var_features],
+    ]
 }
 
 #------------------------------------------------------------------------------#

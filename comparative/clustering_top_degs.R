@@ -1,9 +1,9 @@
 ################################################################################
-#####               Multigroup heatmap for bulk RNA-seq data               #####
+#####       Clustering analysis (top differentially expressed genes)       #####
 ################################################################################
 
-# Create a single heatmap that includes genes enriched from several groups or
-# comparisons.
+# Create a single heatmap that includes the top differentially expressed genes
+# from across several comparisons.
 
 # Prior to running this script, you should have already run the appropriate
 # differential expression tests within your Pluto Bio experiment.
@@ -156,7 +156,7 @@ normalized_data <- data.frame(
 normalized_data_mat <- as.matrix(normalized_data)
 
 #------------------------------------------------------------------------------#
-#----                    Prepare multigroup heatmap data                   ----#
+#----                         Prepare heatmap data                         ----#
 #------------------------------------------------------------------------------#
 # Get heatmap annotations
 # ***** BE SURE TO ADJUST THE ANNOTATION COLORS FOR YOUR ANALYSIS!! *****
@@ -204,9 +204,8 @@ if (!is.null(annotation_column)) {
 col_fun <- colorRamp2(c(-4, 0, 4), c("blue", "white", "red"))
 
 #------------------------------------------------------------------------------#
-#----                      Generate multigroup heatmap                     ----#
+#----                            Create heatmap                            ----#
 #------------------------------------------------------------------------------#
-# Create heatmap
 # ***** CUSTOMIZE THE HEATMAP() FUNCTION OPTIONS FOR YOUR ANALYSIS!! *****
 if (!(is.null(annotation_column))) {
   hm <- Heatmap(

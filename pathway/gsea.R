@@ -49,6 +49,14 @@ organism <- "mouse"
 collection_shortname <- "h"
 collection_name <- "Hallmarks"
 
+# Optionally define custom gene sets to test for enrichment.
+# Set to NULL if unused.
+# Example:
+# custom_gene_sets <- list(
+#     "custom_set_1" = c("GeneA", "GeneB", "GeneC"),
+#     "custom_set_2" = c("GeneD", "GeneE", "GeneF"))
+custom_gene_sets <- NULL
+
 # Specify the differential expression analysis you want to use for your gene
 # list. This list will be ranked according to rank_method.
 plot_id <- "f393c752-1056-4772-b31c-76ac258a4006"
@@ -99,13 +107,15 @@ top_pathways_num <- 10
 
 get_all_gene_sets <- function(organism) {
     all_gene_sets <- msigdbr(species = organism)
-    all_gene_sets$gs_subcat <- gsub("\\:", "_", all_gene_sets$gs_subcat)
+    all_gene_sets$gs_subcollection <- gsub(
+        "\\:", "_", all_gene_sets$gs_subcollection
+    )
     all_gene_sets$Collection_Shortname <- tolower(paste0(
-        all_gene_sets$gs_cat,
-        ifelse(all_gene_sets$gs_subcat == "", "", "__"),
-        all_gene_sets$gs_subcat
+        all_gene_sets$gs_collection,
+        ifelse(all_gene_sets$gs_subcollection == "", "", "__"),
+        all_gene_sets$gs_subcollection
     ))
-    names(all_gene_sets)[3] <- "Gene_Set_Shortname"
+    names(all_gene_sets)[9] <- "Gene_Set_Shortname"
     return(all_gene_sets)
 }
 
@@ -256,6 +266,27 @@ check_target_gene_set(all_gene_sets, collection_shortname)
 # Get target gene sets
 target_gene_sets <- get_target_gene_sets(all_gene_sets, collection_shortname)
 
+# Append custom gene sets if provided
+if (!is.null(custom_gene_sets)) {
+    if (!is.list(custom_gene_sets) || is.null(names(custom_gene_sets))) {
+        stop("`custom_gene_sets` must be a named list of character vectors.")
+    }
+
+    # Warn about duplicates and overwrite if needed
+    overlapping_names <- intersect(
+        names(target_gene_sets), names(custom_gene_sets)
+    )
+    if (length(overlapping_names) > 0) {
+        warning(
+            "Custom gene sets overwrite existing gene sets with same names: ",
+            paste(overlapping_names, collapse = ", ")
+        )
+    }
+
+    # Append or overwrite MSigDB sets with custom ones
+    target_gene_sets <- c(target_gene_sets, custom_gene_sets)
+}
+
 # Get ranked gene list from differential expression table
 ranked_results <- get_ranked_gene_list(deg_table, rank_method)
 ranked_gene_list <- ranked_results$ranked_gene_list
@@ -308,9 +339,11 @@ saveWidget(
 
 # Get top positively and negatively enriched pathways
 top_pos <- fgsea_table %>%
+    filter(NES > 0) %>%
     arrange(desc(NES)) %>%
     head(top_pathways_num)
 top_neg <- fgsea_table %>%
+    filter(NES < 0) %>%
     arrange(NES) %>%
     head(top_pathways_num)
 top_pathways <- bind_rows(

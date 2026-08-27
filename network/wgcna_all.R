@@ -26,7 +26,7 @@
 
 # You will need an API token to programmatically access your data in Pluto.
 # For info, visit: https://help.pluto.bio/en/articles/creating-your-api-token
-api_token <- "7e251902ce0eee2b7d72be28a4f3ff7d6cae3cbe"
+api_token <- "YOUR_API_TOKEN"
 
 # The experiment ID can be found in the Workflow tab of your experiment in Pluto
 # or in the URL, and always starts with "PLX".
